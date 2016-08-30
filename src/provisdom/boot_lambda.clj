@@ -43,7 +43,7 @@
                                         cmd-string (->> *opts* (task-opts->cmd-opts input-files) (cmd-opts->string "aws lambda create-function"))]
                                     (util/info "Creating lambda function...\n")
                                     (util/info (str cmd-string "\n"))
-                                    #_(shell cmd-string))
+                                    (shell cmd-string))
                                   fileset))
 
 (core/deftask update-function
