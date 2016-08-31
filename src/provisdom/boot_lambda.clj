@@ -38,7 +38,7 @@
    r runtime VAL str "The runtime environment for the Lambda function you are uploading"
    a region VAL str "AWS region"
    i role VAL str "The ARN of the IAM role that Lambda assumes when it executes your function"
-   p handler VAL sym "The function within your code that Lambda calls to begin execution"
+   e handler VAL sym "The function within your code that Lambda calls to begin execution"
    c code VAL str "The code for the Lambda function"
    d description VAL str "A short, user-defined function description"
    t timeout VAL int "The function execution time at which Lambda should terminate the function"
