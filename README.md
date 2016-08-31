@@ -2,11 +2,18 @@
 
 [](dependency)
 ```clojure
-[provisdom/boot-lambda "0.1.0-SNAPSHOT"] ;; latest release
+[provisdom/boot-lambda "0.1.0"] ;; latest release
 ```
 [](/dependency)
 
 ## Usage
+
+The parameters for the library closely mirror the parameters that you would pass to
+the Lambda CLI. The one exception is `:local-file` replaces `--zip-file` in the CLI.
+This is to make the project more usable in the Boot environment. `:local-file` is 
+the path to a file in your Boot working directory. For example, if you have an 
+`uberjar` task that builds your uberjar called `my-uberjar.jar` to `target` directory
+then you would set the `:local-file` option to be `my-uberjar.jar`.
 
 ```clojure
 (def function-name "lambda-test-project")
@@ -28,7 +35,7 @@
 ## Options
 
 See http://docs.aws.amazon.com/cli/latest/reference/lambda/index.html#cli-aws-lambda 
-for a list of options
+for a more detailed list of options and what they do.
 
 ## License
 

@@ -1,5 +1,5 @@
 (def project 'provisdom/boot-lambda)
-(def version "0.1.0-SNAPSHOT")
+(def version "0.1.0")
 
 (set-env! :resource-paths #{"src"}
           :source-paths #{"test"}
@@ -8,7 +8,8 @@
                           [adzerk/boot-test "1.1.2" :scope "test"]
                           [adzerk/bootlaces "0.1.13" :scope "test"]])
 
-(require '[adzerk.bootlaces :refer :all])
+(require '[adzerk.bootlaces :refer :all]
+         '[provisdom.boot-lambda :refer :all])
 
 (bootlaces! version)
 
