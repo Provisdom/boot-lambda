@@ -61,6 +61,7 @@
 (core/deftask update-function
   [f function-name VAL str "The name you want to assign to the function you are uploading"
    l local-file VAL str "The path to the local file of the code you are uploading"
+   a region VAL str "AWS region"
    b s3-bucket VAL str "Amazon S3 bucket name where the .zip file containing your deployment package is stored"
    k s3-key VAL str "The Amazon S3 object (the deployment package) key name you want to upload"
    v s3-object-version VAL str "The Amazon S3 object (the deployment package) version you want to upload"
