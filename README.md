@@ -2,7 +2,7 @@
 
 [](dependency)
 ```clojure
-[provisdom/boot-lambda "0.1.2-alpha1"] ;; latest release
+[provisdom/boot-lambda "0.1.2-alpha2"] ;; latest release
 ```
 [](/dependency)
 

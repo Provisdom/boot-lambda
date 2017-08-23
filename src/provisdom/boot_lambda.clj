@@ -112,10 +112,10 @@
     (try
       ;; throws if function does not exist
       (shell (format "aws lambda get-function --function-name %s" function-name))
+      (apply update-function (mapcat identity (select-task-keys #'update-function opts)))
       (catch Exception ex
         (util/info (format "Function %s not found. Creating function..." function-name))
-        (apply create-function (mapcat identity (select-task-keys #'create-function opts)))))
-    (apply update-function (mapcat identity (select-task-keys #'update-function opts)))))
+        (apply create-function (mapcat identity (select-task-keys #'create-function opts)))))))
 
 (core/deftask generate-cljs-lambda-index
   [f handler VAL sym "The AWS Lambda function handler."

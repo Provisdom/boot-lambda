@@ -1,5 +1,5 @@
 (def project 'provisdom/boot-lambda)
-(def version "0.1.2-alpha1")
+(def version "0.1.2-alpha2")
 
 (set-env! :resource-paths #{"src"}
           :source-paths #{"test"}
