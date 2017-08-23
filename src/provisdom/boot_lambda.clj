@@ -2,15 +2,16 @@
   {:boot/export-tasks true}
   (:require
     [clojure.string :as str]
+    [clojure.java.io :as io]
     [boot.core :as core]
     [boot.util :as util]))
 
 (defn- cmd-opts->string
   [cmd-opts init]
-  (reduce (fn [opts [k v]]
+  (reduce (fn [opts-str [k v]]
             (if (nil? v)
-              opts
-              (format (if (instance? Boolean v) "%s --%s" "%s --%s %s") opts (name k) v))) init cmd-opts))
+              opts-str
+              (format (if (instance? Boolean v) "%s --%s" "%s --%s %s") opts-str (name k) v))) init cmd-opts))
 
 (defn- shell
   [command]
@@ -95,3 +96,43 @@
       (util/info (str cmd-string "\n"))
       (shell cmd-string))
     fileset))
+
+(defn select-task-keys
+  [task-var opts]
+  (let [task-keys (-> (map (comp :id (partial apply hash-map)) (:argspec (meta task-var)))
+                      set
+                      (disj :help))]
+    (select-keys opts task-keys)))
+
+(core/deftask deploy
+  "Creates the Lambda function if it does not exist, otherwise updates the function."
+  [o opts VAL code "The options passed to [[create-function]] and [[update-function]]"]
+  (let [function-name (:function-name opts)]
+    (assert function-name ":function-name is required.")
+    (try
+      ;; throws if function does not exist
+      (shell (format "aws lambda get-function --function-name %s" function-name))
+      (catch Exception ex
+        (util/info (format "Function %s not found. Creating function..." function-name))
+        (apply create-function (mapcat identity (select-task-keys #'create-function opts)))))
+    (apply update-function (mapcat identity (select-task-keys #'update-function opts)))))
+
+(core/deftask generate-cljs-lambda-index
+  [f handler VAL sym "The AWS Lambda function handler."
+   p path VAL str "The path to the main JS file. Defaults to './main.js'."
+   o out VAL str "The generated output file name. Defaults to 'index.js'."]
+  (assert handler "A :handler is required.")
+  (core/with-pre-wrap fileset
+    (let [input-files (core/input-files fileset)
+          js-file-path (or path "./main.js")
+          out-file-name (or out "index.js")
+          file-content (format "require(\"%s\");\nexports.handler = %s;"
+                               js-file-path
+                               (-> handler
+                                   str
+                                   (str/replace "-" "_")
+                                   (str/replace "/" ".")))
+          out-dir (core/tmp-dir!)
+          out-file (io/file out-dir out-file-name)]
+      (spit out-file file-content)
+      (core/commit! (core/add-resource fileset out-dir)))))
