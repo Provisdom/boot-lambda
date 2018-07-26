@@ -59,6 +59,32 @@
       (shell cmd-string))
     fileset))
 
+(core/deftask update-function-configuration
+  [f function-name VAL str "The name you want to assign to the function you are uploading"
+   r runtime VAL str "The runtime environment for the Lambda function you are uploading"
+   i role VAL str "The ARN of the IAM role that Lambda assumes when it executes your function"
+   e handler VAL sym "The function within your code that Lambda calls to begin execution"
+   d description VAL str "A short, user-defined function description"
+   t timeout VAL int "The function execution time at which Lambda should terminate the function"
+   m memory-size VAL int "The amount of memory, in MB, your Lambda function is given"
+   v vpc-config VAL str "Identifies the list of security group IDs and subnet IDs"
+   j cli-input-json VAL str "Performs service operation based on the JSON string provided"
+   g generate-cli-skeleton bool "Prints a sample input JSON to standard output"
+   _ environment VAL str "The parent object that contains your environment's configuration settings"
+   _ dead-letter-config VAL str "The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic"
+   _ kms-key-arn VAL str "The Amazon Resource Name (ARN) of the KMS key used to encrypt your function's environment variables"
+   _ tracing-config VAL str "The parent object that contains your function's tracing settings"
+   _ revision-id VAL str "Used to ensure you are updating the latest update of the function version or alias"]
+  (when-not function-name
+    (throw (Exception. "Required function-name to update function configuration")))
+  (core/with-pre-wrap fileset
+    (let [input-files (core/input-files fileset)
+          cmd-string (lambda-cmd-string input-files *opts* "update-function-configuration")]
+      (util/info "Updating lambda function configuration...\n")
+      (util/info (str cmd-string "\n"))
+      (shell cmd-string))
+    fileset))
+
 (core/deftask update-function
   [f function-name VAL str "The name you want to assign to the function you are uploading"
    l local-file VAL str "The path to the local file of the code you are uploading"
@@ -112,7 +138,8 @@
     (try
       ;; throws if function does not exist
       (shell (format "aws lambda get-function --function-name %s" function-name))
-      (apply update-function (mapcat identity (select-task-keys #'update-function opts)))
+      (comp (apply update-function-configuration (mapcat identity (select-task-keys #'update-function-configuration opts)))
+            (apply update-function (mapcat identity (select-task-keys #'update-function opts))))
       (catch Exception ex
         (util/info (format "Function %s not found. Creating function..." function-name))
         (apply create-function (mapcat identity (select-task-keys #'create-function opts)))))))
