@@ -74,7 +74,8 @@
    _ dead-letter-config VAL str "The parent object that contains the target ARN (Amazon Resource Name) of an Amazon SQS queue or Amazon SNS topic"
    _ kms-key-arn VAL str "The Amazon Resource Name (ARN) of the KMS key used to encrypt your function's environment variables"
    _ tracing-config VAL str "The parent object that contains your function's tracing settings"
-   _ revision-id VAL str "Used to ensure you are updating the latest update of the function version or alias"]
+   _ revision-id VAL str "Used to ensure you are updating the latest update of the function version or alias"
+   _ layers VAL str "A string containing zero or more function layers specified by their ARNs and separated by a space"]
   (when-not function-name
     (throw (Exception. "Required function-name to update function configuration")))
   (core/with-pre-wrap fileset
