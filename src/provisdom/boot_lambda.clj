@@ -3,6 +3,7 @@
   (:require
     [clojure.string :as str]
     [clojure.java.io :as io]
+    [clojure.java.shell :as java-shell]
     [boot.core :as core]
     [boot.util :as util]))
 
@@ -33,6 +34,30 @@
 (defn- lambda-cmd-string
   [input-files opts command & args]
   (-> opts (task-opts->cmd-opts input-files) (cmd-opts->string (format "aws lambda %s" command)) (str " " (str/join " " args))))
+
+(defn- last-lambda-update-status
+  [function-name]
+  (let [cmd-string (format "aws lambda get-function-configuration --function-name %s --query \"LastUpdateStatus\" --output text" function-name)]
+    (util/info (str cmd-string "\n"))
+    (-> (apply java-shell/sh (str/split cmd-string #" "))
+        (:out)
+        (str/trim))))
+
+(defn- await-configuration-update-success
+  [function-name]
+  (let [retry-after-seconds 10
+        timeout-seconds 90]  ; AWS docs say it should complete within a minute; give it a little longer (https://docs.aws.amazon.com/cli/latest/reference/lambda/update-function-configuration.html)
+    (loop [elapsed-seconds 0]
+      (when (>= elapsed-seconds timeout-seconds)
+        (throw (Exception. "Function configuration update did not complete in time\n")))
+      (let [status (last-lambda-update-status function-name)]
+        (case status
+          "InProgress" (do (util/info "Waiting until lambda function configuration has completed successfully...\n")
+                           (Thread/sleep (* retry-after-seconds 1000))
+                           (recur (+ elapsed-seconds retry-after-seconds)))
+          "Failed" (throw (Exception. "Function configuration update failed\n"))
+          "Successful" (util/info "Function configuration update was successful\n")
+          (throw (Exception. (str "Unexpected function configuration update status: " status))))))))
 
 (core/deftask create-function
   [f function-name VAL str "The name you want to assign to the function you are uploading"
@@ -83,7 +108,8 @@
           cmd-string (lambda-cmd-string input-files *opts* "update-function-configuration")]
       (util/info "Updating lambda function configuration...\n")
       (util/info (str cmd-string "\n"))
-      (shell cmd-string))
+      (shell cmd-string)
+      (await-configuration-update-success function-name))
     fileset))
 
 (core/deftask update-function
